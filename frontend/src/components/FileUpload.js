@@ -46,7 +46,7 @@ const FileUpload = ({ onFileUpload }) => {
       formData.append('sku', sku);  // Append the SKU input value to FormData
       console.log("FormData content before sending:", formData);  // Debug: Check FormData before sending
 
-      const response = await axios.post('https://med-compare.onrender.com', formData, {
+      const response = await axios.post('https://med-compare.onrender.com/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
