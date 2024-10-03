@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-// Use the correct Render URL for the backend
-const API_BASE_URL = 'https://med-compare.onrender.com';
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
 export const uploadFile = (file) => {
   const formData = new FormData();
