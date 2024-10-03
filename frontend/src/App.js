@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import FileUpload from './components/FileUpload';
+import * as XLSX from 'xlsx'; // Import XLSX for file export
 
 const App = () => {
   const [matchedData, setMatchedData] = useState([]);
   const [searchInput, setSearchInput] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [selectedRows, setSelectedRows] = useState({}); // Track selected rows
 
   // Function to handle file uploads and update the table with the results
   const handleFileUpload = (data) => {
@@ -16,6 +18,7 @@ const App = () => {
   const handleReset = () => {
     setMatchedData([]); // Clear matched data
     setSearchInput(''); // Clear SKU input
+    setSelectedRows({}); // Clear selected rows
   };
 
   // Create a unique set of keys from all matched results for dynamic columns
@@ -26,15 +29,6 @@ const App = () => {
     });
     return Array.from(columns); // Convert the Set to an array
   }, [matchedData]);
-
-  // Function to handle sorting by column
-  const handleSort = (column) => {
-    let direction = 'asc';
-    if (sortConfig.key === column && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key: column, direction });
-  };
 
   // Flatten the matchedData to have a single list of rows across all files
   const flattenedData = useMemo(() => {
@@ -61,6 +55,32 @@ const App = () => {
     }
     return flattenedData;
   }, [flattenedData, sortConfig]);
+
+  // Function to handle sorting by column
+  const handleSort = (column) => {
+    let direction = 'asc';
+    if (sortConfig.key === column && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key: column, direction });
+  };
+
+  // Handle checkbox selection for each row
+  const handleCheckboxChange = (rowIndex) => {
+    setSelectedRows((prev) => ({
+      ...prev,
+      [rowIndex]: !prev[rowIndex], // Toggle the checkbox state
+    }));
+  };
+
+  // Export the selected rows to an xlsx file
+  const handleExport = () => {
+    const selectedData = sortedData.filter((_, index) => selectedRows[index]); // Get only the selected rows
+    const ws = XLSX.utils.json_to_sheet(selectedData); // Convert selected rows to a worksheet
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Selected Data');
+    XLSX.writeFile(wb, 'SelectedData.xlsx'); // Save as file
+  };
 
   return (
     <div>
@@ -90,10 +110,28 @@ const App = () => {
             Reset
           </button>
 
+          {/* Export Button */}
+          <button
+            style={{
+              backgroundColor: '#007BFF',
+              color: 'white',
+              border: 'none',
+              padding: '10px 20px',
+              cursor: 'pointer',
+              marginBottom: '20px',
+              marginLeft: '10px',
+            }}
+            onClick={handleExport}
+            disabled={!Object.values(selectedRows).some((isSelected) => isSelected)} // Disable button if no rows are selected
+          >
+            Export Selected Rows
+          </button>
+
           {/* Results Table */}
           <table border="1" style={{ margin: '20px 0', borderCollapse: 'collapse', width: '100%' }}>
             <thead>
               <tr>
+                <th>Select</th> {/* Add a select column */}
                 {allColumns.map((column) => (
                   <th
                     key={column}
@@ -113,6 +151,13 @@ const App = () => {
             <tbody>
               {sortedData.map((detail, index) => (
                 <tr key={index}>
+                  <td style={{ textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={!!selectedRows[index]} // Check if the row is selected
+                      onChange={() => handleCheckboxChange(index)} // Toggle checkbox
+                    />
+                  </td>
                   {allColumns.map((column) => (
                     <td key={column} style={{ padding: '8px', textAlign: 'center' }}>
                       {detail[column] || '-'}
