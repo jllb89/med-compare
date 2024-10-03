@@ -36,24 +36,31 @@ const App = () => {
     setSortConfig({ key: column, direction });
   };
 
-  // Sort the matchedData based on the current sort configuration
+  // Flatten the matchedData to have a single list of rows across all files
+  const flattenedData = useMemo(() => {
+    return matchedData.flatMap((entry) =>
+      entry.details.map((detail) => ({
+        ...detail,
+        filename: entry.filename, // Add the filename to each detail object
+      }))
+    );
+  }, [matchedData]);
+
+  // Sort the flattened data based on the current sort configuration
   const sortedData = useMemo(() => {
     if (sortConfig.key) {
-      return matchedData.map((entry) => ({
-        ...entry,
-        details: [...entry.details].sort((a, b) => {
-          if (a[sortConfig.key] < b[sortConfig.key]) {
-            return sortConfig.direction === 'asc' ? -1 : 1;
-          }
-          if (a[sortConfig.key] > b[sortConfig.key]) {
-            return sortConfig.direction === 'asc' ? 1 : -1;
-          }
-          return 0;
-        }),
-      }));
+      return [...flattenedData].sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
     }
-    return matchedData;
-  }, [matchedData, sortConfig]);
+    return flattenedData;
+  }, [flattenedData, sortConfig]);
 
   return (
     <div>
@@ -104,17 +111,15 @@ const App = () => {
               </tr>
             </thead>
             <tbody>
-              {sortedData.map((entry, index) =>
-                entry.details.map((detail, detailIndex) => (
-                  <tr key={`${index}-${detailIndex}`}>
-                    {allColumns.map((column) => (
-                      <td key={column} style={{ padding: '8px', textAlign: 'center' }}>
-                        {column === 'filename' ? entry.filename : detail[column] || '-'}
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              )}
+              {sortedData.map((detail, index) => (
+                <tr key={index}>
+                  {allColumns.map((column) => (
+                    <td key={column} style={{ padding: '8px', textAlign: 'center' }}>
+                      {detail[column] || '-'}
+                    </td>
+                  ))}
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
