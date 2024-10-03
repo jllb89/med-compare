@@ -28,7 +28,7 @@ const App = () => {
 
   return (
     <div>
-      <h1>Med-Compare Platform</h1>
+      <h1>Med-Compare</h1>
       <FileUpload onFileUpload={handleFileUpload} />
 
       {/* Render the dynamic results table if matched data is present */}
@@ -40,7 +40,7 @@ const App = () => {
           {/* Reset Button */}
           <button
             style={{
-              backgroundColor: '#d9534f',
+              backgroundColor: '#000000',
               color: 'white',
               border: 'none',
               padding: '10px 20px',

@@ -72,7 +72,7 @@ const FileUpload = ({ onFileUpload }) => {
       {/* Display selected files (for debugging and user confirmation) */}
       {files.length > 0 && (
         <div style={{ margin: '10px 0' }}>
-          <strong>Files to be uploaded:</strong>
+          <strong>Archivos a ser comparados:</strong>
           <ul>
             {files.map((file, index) => (
               <li key={index}>{file.name}</li>
@@ -84,7 +84,7 @@ const FileUpload = ({ onFileUpload }) => {
       {/* SKU input field */}
       <input
         type="text"
-        placeholder="Enter SKU"
+        placeholder="Introducir producto a comparar..."
         value={sku}
         onChange={handleSKUChange}
         style={{ marginLeft: '10px' }}
@@ -92,7 +92,7 @@ const FileUpload = ({ onFileUpload }) => {
 
       {/* Upload button */}
       <button onClick={handleUpload} disabled={uploading} style={{ marginLeft: '10px' }}>
-        {uploading ? 'Uploading...' : 'Upload Files'}
+        {uploading ? 'Subiendo...' : 'Subir Archivos'}
       </button>
       {error && <p style={{ color: 'red' }}>{error}</p>}
     </div>
