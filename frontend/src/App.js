@@ -4,6 +4,7 @@ import FileUpload from './components/FileUpload';
 const App = () => {
   const [matchedData, setMatchedData] = useState([]);
   const [searchInput, setSearchInput] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   // Function to handle file uploads and update the table with the results
   const handleFileUpload = (data) => {
@@ -13,18 +14,46 @@ const App = () => {
 
   // Function to reset everything and start over
   const handleReset = () => {
-    setMatchedData([]);   // Clear matched data
-    setSearchInput('');   // Clear SKU input
+    setMatchedData([]); // Clear matched data
+    setSearchInput(''); // Clear SKU input
   };
 
   // Create a unique set of keys from all matched results for dynamic columns
   const allColumns = useMemo(() => {
-    let columns = new Set(['filename']);  // Start with static columns (filename only)
+    let columns = new Set(['filename']); // Start with static columns (filename only)
     matchedData.forEach((item) => {
       item.details.forEach((detail) => Object.keys(detail).forEach((key) => columns.add(key)));
     });
-    return Array.from(columns);  // Convert the Set to an array
+    return Array.from(columns); // Convert the Set to an array
   }, [matchedData]);
+
+  // Function to handle sorting by column
+  const handleSort = (column) => {
+    let direction = 'asc';
+    if (sortConfig.key === column && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key: column, direction });
+  };
+
+  // Sort the matchedData based on the current sort configuration
+  const sortedData = useMemo(() => {
+    if (sortConfig.key) {
+      return matchedData.map((entry) => ({
+        ...entry,
+        details: [...entry.details].sort((a, b) => {
+          if (a[sortConfig.key] < b[sortConfig.key]) {
+            return sortConfig.direction === 'asc' ? -1 : 1;
+          }
+          if (a[sortConfig.key] > b[sortConfig.key]) {
+            return sortConfig.direction === 'asc' ? 1 : -1;
+          }
+          return 0;
+        }),
+      }));
+    }
+    return matchedData;
+  }, [matchedData, sortConfig]);
 
   return (
     <div>
@@ -32,11 +61,13 @@ const App = () => {
       <FileUpload onFileUpload={handleFileUpload} />
 
       {/* Render the dynamic results table if matched data is present */}
-      {matchedData.length > 0 && (
+      {sortedData.length > 0 && (
         <div style={{ marginTop: '20px' }}>
           {/* Updated heading to include the input SKU */}
-          <h2>Matching Results for: <span style={{ color: 'blue' }}>{searchInput}</span></h2>
-          
+          <h2>
+            Matching Results for: <span style={{ color: 'blue' }}>{searchInput}</span>
+          </h2>
+
           {/* Reset Button */}
           <button
             style={{
@@ -51,20 +82,29 @@ const App = () => {
           >
             Reset
           </button>
-          
+
           {/* Results Table */}
           <table border="1" style={{ margin: '20px 0', borderCollapse: 'collapse', width: '100%' }}>
             <thead>
               <tr>
                 {allColumns.map((column) => (
-                  <th key={column} style={{ padding: '8px', backgroundColor: '#f2f2f2', cursor: 'pointer' }}>
-                    {column.toUpperCase()}
+                  <th
+                    key={column}
+                    onClick={() => handleSort(column)} // Add onClick to handle sorting
+                    style={{
+                      padding: '8px',
+                      backgroundColor: '#f2f2f2',
+                      cursor: 'pointer',
+                      textDecoration: sortConfig.key === column ? 'underline' : 'none',
+                    }}
+                  >
+                    {column.toUpperCase()} {sortConfig.key === column && (sortConfig.direction === 'asc' ? '▲' : '▼')}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {matchedData.map((entry, index) => (
+              {sortedData.map((entry, index) =>
                 entry.details.map((detail, detailIndex) => (
                   <tr key={`${index}-${detailIndex}`}>
                     {allColumns.map((column) => (
@@ -74,7 +114,7 @@ const App = () => {
                     ))}
                   </tr>
                 ))
-              ))}
+              )}
             </tbody>
           </table>
         </div>
