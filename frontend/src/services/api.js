@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// Update the base URL to point to your Render backend
+// Use the correct Render URL for the backend
 const API_BASE_URL = 'https://med-compare.onrender.com';
 
 export const uploadFile = (file) => {
